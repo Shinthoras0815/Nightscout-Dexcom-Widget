@@ -1,0 +1,13 @@
+# Virtualenvs / build
+.venv/
+__pycache__/
+build/
+dist/
+venv/
+Nightscout Widget/
+out/
+
+dexcom test.py
+
+# Env & secrets
+.env
