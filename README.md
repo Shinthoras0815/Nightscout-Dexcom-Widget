@@ -4,6 +4,15 @@ A lightweight Python desktop widget (Tkinter + embedded Matplotlib) plus an opti
 
 > Disclaimer: This project is for personal / educational use only and is **not** a medical device. Always verify therapy decisions with approved tools.
 
+## Note on Project Origin
+This project was created as an **experiment in using AI-assisted tools** during the development process.
+
+**My contribution:**  
+Concept design, definition of core features and metrics, UX feedback, validation with real-world data, quality assurance and decisions regarding build/deployment, domain guidance, critical review, and iterative refinement.
+
+**AI assistance:**  
+Code generation and refactoring (HTTP client, Dexcom integration, chart logic, build automation) as well as numerous robustness and layout adjustments.
+
 ## Key Features
 * Always‑on‑top desktop widget (movable, borderless, dark theme)
 * Full dashboard (6h window) with:
