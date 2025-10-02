@@ -18,6 +18,9 @@ PowerShell -ExecutionPolicy Bypass -File .\build_nuitka.ps1 -OneFile
 
 # Optional icon
 PowerShell -ExecutionPolicy Bypass -File .\build_nuitka.ps1 -Icon .\icon.ico
+
+# Custom output directory (helps with AV exclusions)
+PowerShell -ExecutionPolicy Bypass -File .\build_nuitka.ps1 -OneFile -OutputDir C:\\NuitkaBuild
 ```
 
 Outputs:
@@ -34,3 +37,12 @@ Place your `.env` next to the executable when using the Standalone build. The ap
 - If build tools are missing, install “Visual Studio Build Tools 2022” and select “C++ Build Tools”.
 - The app uses `tk-inter`, `matplotlib`, `numpy`, `pandas`; Nuitka plugins are enabled in the build script.
 - For Onefile builds, consider keeping settings in `%APPDATA%` if you prefer portability (current setup keeps `.env` next to EXE by design).
+
+### Troubleshooting OneFile builds on Windows
+- Symptom: Build ends with "Failed to add resources to file 'build\widget.exe'" or the resulting EXE is not functional.
+- Cause: Windows Defender/Antivirus frequently locks the PE during resource embedding.
+- Fixes:
+	- Add an exclusion for the project/build folder in Windows Security → Virus & threat protection → Manage settings → Exclusions.
+	- Or temporarily disable real-time protection during the build.
+	- Or build into a different folder using `-OutputDir C:\\NuitkaBuild` and exclude that folder.
+	- As a robust alternative, prefer the Standalone build (`build\\widget.dist\\widget.exe`). Place your `.env` next to the EXE.

@@ -5,7 +5,8 @@
 param(
     [switch]$OneFile = $false,
     [string]$Icon = '',
-    [switch]$NoPause = $false
+    [switch]$NoPause = $false,
+    [string]$OutputDir = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -16,8 +17,11 @@ if (!(Test-Path $venvPython)) {
     Write-Error "Virtual environment python not found: $venvPython"
 }
 
-# Ensure Nuitka installed
-& $venvPython -m pip install -U nuitka orderedset zstandard | Out-Host
+# Ensure tooling and Nuitka are installed
+# Note: 'ordered-set' (hyphen) is a required dependency for Nuitka. Do NOT use 'orderedset' (no hyphen),
+# it is a different package with a C extension that fails to build on recent Python versions.
+& $venvPython -m pip install -U pip setuptools wheel | Out-Host
+& $venvPython -m pip install -U nuitka ordered-set zstandard | Out-Host
 
 # Common args
 $nargs = @(
@@ -32,6 +36,10 @@ $nargs = @(
 
 if ($OneFile) { $nargs += '--onefile' } else { $nargs += '--standalone' }
 if ($Icon -ne '') { $nargs += @('--windows-icon-from-ico', $Icon) }
+if ($OutputDir -ne '') {
+    # Nuitka writes dist into --output-dir; the OneFile PE goes to that folder too
+    $nargs = $nargs | ForEach-Object { $_ -replace '^--output-dir=build$', "--output-dir=$OutputDir" }
+}
 
 # Target script
 $nargs += 'widget.py'
@@ -47,14 +55,25 @@ Write-Host "Building with Nuitka: $($nargs -join ' ')"
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 if ($OneFile) {
-    $out = Join-Path $PSScriptRoot 'build\widget.exe'
+    if ($OutputDir -ne '') {
+        $outRoot = $OutputDir
+    } else {
+        $outRoot = Join-Path $PSScriptRoot 'build'
+    }
+    $out = Join-Path $outRoot 'widget.exe'
     if (Test-Path $out) {
         Write-Host "Onefile build created: $out"
     } else {
-        Write-Warning "Onefile build not found."
+        Write-Warning "Onefile build not found. Prüfe Antivirus/Windows Defender Ausschlüsse für den Build-Ordner und versuche es erneut."
+        Write-Host "Tipp: Führe mit ausgeschaltetem AV oder anderem Output-Ordner (z.B. -OutputDir C:\\NuitkaBuild) aus."
     }
 } else {
-    $dist = Join-Path $PSScriptRoot 'build\widget.dist\widget.exe'
+    if ($OutputDir -ne '') {
+        $distRoot = $OutputDir
+    } else {
+        $distRoot = Join-Path $PSScriptRoot 'build'
+    }
+    $dist = Join-Path $distRoot 'widget.dist\widget.exe'
     if (Test-Path $dist) {
         Write-Host "Standalone build created: $dist"
         Write-Host "Hint: place your .env next to this EXE for settings persistence."

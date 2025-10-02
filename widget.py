@@ -41,6 +41,23 @@ try:
 except Exception:
     _DASHBOARD_AVAILABLE = False
 
+# --- Dual entry support ----------------------------------------------------
+# Allow running the bundled dashboard from the same executable using a flag.
+if '--dashboard' in sys.argv:
+    try:
+        import dashboard as _dashboard
+        _dashboard.main()
+    except Exception as _dash_err:
+        # If dashboard fails, show a minimal Tk error dialog then exit.
+        try:
+            import tkinter as _tk
+            from tkinter import messagebox as _mb
+            _r = _tk.Tk(); _r.withdraw()
+            _mb.showerror("Dashboard Fehler", f"Dashboard konnte nicht gestartet werden:\n{_dash_err}")
+        except Exception:
+            pass
+    sys.exit(0)
+
 # --- Setup env & HTTP ------------------------------------------------
 def _app_base_dir() -> str:
     # When compiled (Nuitka/pyinstaller), use the executable location; otherwise file directory
@@ -1565,9 +1582,13 @@ class CGMWidget:
             if self._dexcom_only:
                 messagebox.showinfo("Nicht verfügbar", "Dashboard ist im Dexcom-Only Modus deaktiviert.")
                 return
-            script = os.path.join(os.path.dirname(__file__), "dashboard.py")
-            # Use same interpreter (venv) to run the dashboard script
-            subprocess.Popen([sys.executable, script], close_fds=False)
+            # In compiled mode, relaunch the same executable with --dashboard.
+            if getattr(sys, 'frozen', False):
+                subprocess.Popen([sys.executable, "--dashboard"], close_fds=False)
+            else:
+                # When running from source, call this script with --dashboard to trigger dashboard entry.
+                this_script = os.path.abspath(__file__)
+                subprocess.Popen([sys.executable, this_script, "--dashboard"], close_fds=False)
         except Exception:
             # Optional: we could show a brief status message
             pass

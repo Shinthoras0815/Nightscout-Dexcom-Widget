@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import sys
 import hashlib
 import datetime as dt
 from typing import Optional, Dict, Any, List, Tuple
@@ -23,7 +24,16 @@ from net import get_json as ns_get_json, BASE as NS_BASE
 
 
 # --- Setup -----------------------------------------------------------
-load_dotenv()
+# Load .env from the application directory (EXE path when frozen, file dir otherwise)
+def _app_base_dir() -> str:
+    try:
+        if getattr(sys, 'frozen', False):
+            return os.path.dirname(sys.executable)
+    except Exception:
+        pass
+    return os.path.dirname(__file__)
+
+load_dotenv(dotenv_path=os.path.join(_app_base_dir(), '.env'))
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 BASE = os.getenv("NIGHTSCOUT_URL")
